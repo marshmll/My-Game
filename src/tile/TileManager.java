@@ -13,8 +13,8 @@ import main.GamePanel;
 public class TileManager {
 
 	GamePanel gp;
-	Tile tile[];
-	int mapTileNumbers[][];
+	public Tile tile[];
+	public int mapTileNumbers[][];
 
 	public TileManager(GamePanel gp) {
 
@@ -23,32 +23,38 @@ public class TileManager {
 		mapTileNumbers = new int[gp.maxWorldRow][gp.maxWorldCol];
 
 		this.getTileImage();
-		this.loadMap("/maps/world_01.txt");
+		this.loadMap("/maps/world.map");
 	}
-	
-	private Tile createTileFromPath(String path) {
+
+	public void getTileImage() {
+
+		tile[0] = createTileFromPath("/tiles/grass.png", false);
+		tile[1] = createTileFromPath("/tiles/wallblock.png", false);
+		tile[2] = createTileFromPath("/tiles/water.png", false);
+		tile[3] = createTileFromPath("/tiles/dirt.png", false);
+		tile[4] = createTileFromPath("/tiles/tree_dark_0.png", true);
+		tile[5] = createTileFromPath("/tiles/sand.png", false);
+		tile[6] = createTileFromPath("/tiles/radioactive_grass.png", false);
+		tile[7] = createTileFromPath("/tiles/radioactive_grass_path.png", false);
+		tile[8] = createTileFromPath("/tiles/radioactive_water.png", false);
+		tile[9] = createTileFromPath("/tiles/dead_bush.png", false);
+		tile[10] = createTileFromPath("/tiles/skull.png", false);
+		tile[11] = createTileFromPath("/tiles/dry_tree.png", true);
+	}
+
+	private Tile createTileFromPath(String path, boolean isCollideable) {
 		Tile tile = new Tile();
 		try {
+
 			tile.image = ImageIO.read(getClass().getResourceAsStream(path));
+			tile.isCollideable = isCollideable;
+
 		} catch (IOException e) {
+
 			e.printStackTrace();
+
 		}
 		return tile;
-	}
-	public void getTileImage() {
-		
-			tile[0] = createTileFromPath("/tiles/grass.png");
-			tile[1] = createTileFromPath("/tiles/wallblock.png");
-			tile[2] = createTileFromPath("/tiles/water.png");
-			tile[3] = createTileFromPath("/tiles/dirt.png");
-			tile[4] = createTileFromPath("/tiles/tree_dark_0.png");
-			tile[5] = createTileFromPath("/tiles/sand.png");
-			tile[6] = createTileFromPath("/tiles/radioactive_grass.png");
-			tile[7] = createTileFromPath("/tiles/radioactive_grass_path.png");
-			tile[8] = createTileFromPath("/tiles/radioactive_water.png");
-			tile[9] = createTileFromPath("/tiles/dead_bush.png");
-			tile[10] = createTileFromPath("/tiles/skull.png");
-			tile[11] = createTileFromPath("/tiles/dry_tree.png");
 	}
 
 	public void loadMap(String filePath) {
@@ -76,7 +82,7 @@ public class TileManager {
 		}
 	}
 
-	public void draw(Graphics2D g2d) {
+	public void draw(Graphics2D g2) {
 
 		for (int row = 0; row < gp.maxWorldRow; row++) {
 
@@ -92,8 +98,8 @@ public class TileManager {
 
 				if (screenX > 0 - gp.tileSize && screenX < gp.screenWidth && screenY > 0 - gp.tileSize
 						&& screenY < gp.screenHeight) {
-					
-					g2d.drawImage(tile[tileNumber].image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+
+					g2.drawImage(tile[tileNumber].image, screenX, screenY, gp.tileSize, gp.tileSize, null);
 				}
 
 			}

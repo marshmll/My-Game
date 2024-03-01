@@ -1,11 +1,11 @@
 package entity;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-
+import java.util.Arrays;
 import javax.imageio.ImageIO;
-
 import main.GamePanel;
 import main.KeyHandler;
 
@@ -20,8 +20,7 @@ public class Player extends Entity {
 	private int originalPlayerWidth = 16;
 	private int originalPlayerHeight = 18;
 
-	private int playerWidth;
-	private int playerHeight;
+	private final String[] acceptedMoves = { "up", "down", "left", "right" };
 
 	public Player(GamePanel gp, KeyHandler keyHandler) {
 
@@ -31,8 +30,23 @@ public class Player extends Entity {
 		this.screenX = (gp.screenWidth / 2) - (gp.tileSize / 2);
 		this.screenY = (gp.screenHeight / 2) - (gp.tileSize / 2);
 
-		this.playerWidth = originalPlayerWidth * gp.scale;
-		this.playerHeight = originalPlayerHeight * gp.scale;
+		this.width = originalPlayerWidth * gp.scale;
+		this.height = originalPlayerHeight * gp.scale;
+
+		this.images.put("up", new BufferedImage[ASSETS_PER_DIRECTION]);
+		this.images.put("down", new BufferedImage[ASSETS_PER_DIRECTION]);
+		this.images.put("left", new BufferedImage[ASSETS_PER_DIRECTION]);
+		this.images.put("right", new BufferedImage[ASSETS_PER_DIRECTION]);
+
+		this.hitBoxWidth = 6 * gp.scale;
+		this.hitBoxHeight = 10 * gp.scale;
+
+		this.hitBoxDefaultX = 6 * gp.scale;
+		this.hitBoxDefaultY = 7 * gp.scale;
+
+		this.hitBox = new Rectangle(hitBoxDefaultX, hitBoxDefaultY, hitBoxWidth, hitBoxHeight);
+
+		this.hasCollided = false;
 
 		this.spriteUpdateRate = 4;
 
@@ -42,8 +56,8 @@ public class Player extends Entity {
 
 	public void setDefaultValues() {
 
-		worldX = 71 * gp.tileSize;
-		worldY = 65 * gp.tileSize;
+		worldX = 97 * gp.tileSize;
+		worldY = 50 * gp.tileSize;
 		speed = 5;
 		direction = "down";
 	}
@@ -52,10 +66,17 @@ public class Player extends Entity {
 		try {
 
 			for (int i = 0; i < ASSETS_PER_DIRECTION; i++) {
-				up[i] = ImageIO.read(getClass().getResourceAsStream("/player/scarlet_up_" + i + ".png"));
-				down[i] = ImageIO.read(getClass().getResourceAsStream("/player/scarlet_down_" + i + ".png"));
-				left[i] = ImageIO.read(getClass().getResourceAsStream("/player/scarlet_left_" + i + ".png"));
-				right[i] = ImageIO.read(getClass().getResourceAsStream("/player/scarlet_right_" + i + ".png"));
+
+				images.get("up")[i] = ImageIO.read(getClass().getResourceAsStream("/player/scarlet_up_" + i + ".png"));
+
+				images.get("down")[i] = ImageIO
+						.read(getClass().getResourceAsStream("/player/scarlet_down_" + i + ".png"));
+
+				images.get("left")[i] = ImageIO
+						.read(getClass().getResourceAsStream("/player/scarlet_left_" + i + ".png"));
+
+				images.get("right")[i] = ImageIO
+						.read(getClass().getResourceAsStream("/player/scarlet_right_" + i + ".png"));
 			}
 
 		} catch (IOException e) {
@@ -63,75 +84,103 @@ public class Player extends Entity {
 		}
 	}
 
-	private void moveUp() {
-		direction = keyHandler.pressedKey;
-		worldY -= speed;
-	}
-
-	private void moveDown() {
-		direction = keyHandler.pressedKey;
-		worldY += speed;
-	}
-
-	private void moveLeft() {
-		direction = keyHandler.pressedKey;
-		worldX -= speed;
-	}
-
-	private void moveRight() {
-		direction = keyHandler.pressedKey;
-		worldX += speed;
-	}
-
 	public void update() {
 
-		if (keyHandler.pressedKey == "up")
-			moveUp();
-		else if (keyHandler.pressedKey == "down")
-			moveDown();
-		else if (keyHandler.pressedKey == "left")
-			moveLeft();
-		else if (keyHandler.pressedKey == "right")
-			moveRight();
+		checkForPlayerActions();
+		runAllAnimations();
+	}
+
+	public void draw(Graphics2D g2) {
+
+		BufferedImage image = null;
+
+		if (images.get(direction) != null) {
+
+			image = images.get(direction)[currentSpriteIndex];
+
+			g2.drawImage(image, screenX, screenY, this.width, this.height, null);
+		}
+	}
+
+	private void checkForPlayerActions() {
+
+		if (keyHandler.hasValidKeyPressed) {
+
+			// INDIVIDUAL ACTIONS
+
+			// Movement Action
+			if (Arrays.asList(acceptedMoves).contains(keyHandler.pressedKey)) {
+
+				this.direction = keyHandler.pressedKey;
+				gp.colChecker.checkTileCollision(this);
+
+				if (!this.hasCollided)
+					movePlayer(this.direction);
+			}
+
+			// Pick up prop action
+			int interactedPropIndex = gp.colChecker.checkPropCollision(this);
+			pickUpProp(interactedPropIndex);
+		}
+	}
+
+	private void movePlayer(String direction) {
+
+		switch (direction) {
+		case "up":
+			worldY -= speed;
+			break;
+		case "down":
+			worldY += speed;
+			break;
+		case "left":
+			worldX -= speed;
+			break;
+		case "right":
+			worldX += speed;
+			break;
+		default:
+			break;
+		}
+
+	}
+
+	private void pickUpProp(int propIndex) {
+
+		if (propIndex != -1) {
+
+			gp.props[propIndex] = null;
+		}
+	}
+
+	private void runAllAnimations() {
 
 		spriteUpdateCounter++;
 
-		if (keyHandler.pressedKey != null && keyHandler.releasedKey != keyHandler.pressedKey) {
+		if (keyHandler.hasValidKeyPressed) {
 
 			if (spriteUpdateCounter > spriteUpdateRate) {
-
 				spriteUpdateIterationCounter++;
 
-				if (spriteUpdateIterationCounter > spriteAnimationMapping.length - 1)
-					spriteUpdateIterationCounter = 0;
+				// INDIVIDUAL ANIMATIONS
 
-				currentSpriteIndex = spriteAnimationMapping[spriteUpdateIterationCounter];
+				// Movement Animation
+				if (Arrays.asList(acceptedMoves).contains(keyHandler.pressedKey)) {
+					runMovimentAnimation();
+				}
+
 				spriteUpdateCounter = 0;
 			}
-
 		} else
 			currentSpriteIndex = 0;
 	}
 
-	public void draw(Graphics2D g2d) {
+	private void runMovimentAnimation() {
 
-		BufferedImage image = null;
+		if (spriteUpdateIterationCounter > spriteMovementAnimationMapping.length - 1) {
 
-		switch (direction) {
-		case "up":
-			image = up[currentSpriteIndex];
-			break;
-		case "down":
-			image = down[currentSpriteIndex];
-			break;
-		case "left":
-			image = left[currentSpriteIndex];
-			break;
-		case "right":
-			image = right[currentSpriteIndex];
-			break;
+			spriteUpdateIterationCounter = 0;
 		}
-
-		g2d.drawImage(image, screenX, screenY, this.playerWidth, this.playerHeight, null);
+		currentSpriteIndex = spriteMovementAnimationMapping[spriteUpdateIterationCounter];
 	}
 }

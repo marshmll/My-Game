@@ -8,6 +8,7 @@ import java.util.Map;
 public class KeyHandler implements KeyListener {
 
 	public String pressedKey, releasedKey;
+	public boolean hasValidKeyPressed;
 	Map<Integer, String> validKeys = new HashMap<Integer, String>();
 
 	public KeyHandler() {
@@ -17,6 +18,7 @@ public class KeyHandler implements KeyListener {
 		validKeys.put(KeyEvent.VK_DOWN, "down");
 		validKeys.put(KeyEvent.VK_LEFT, "left");
 		validKeys.put(KeyEvent.VK_RIGHT, "right");
+		validKeys.put(KeyEvent.VK_E, "e");
 	}
 
 	@Override
@@ -31,7 +33,7 @@ public class KeyHandler implements KeyListener {
 			releasedKey = null;
 
 		pressedKey = key;
-
+		hasValidKeyPressed = true;
 	}
 
 	@Override
@@ -43,8 +45,11 @@ public class KeyHandler implements KeyListener {
 		if (key == null)
 			return; // If the key pressed is not valid, just return.
 
-		if (key == pressedKey) // Reset pressed key if the released key is the same.
+		if (key == pressedKey) {
+			// Reset pressed key if the released key is the same.
 			pressedKey = null;
+			hasValidKeyPressed = false;
+		}
 
 		releasedKey = key;
 	}

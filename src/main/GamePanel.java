@@ -8,11 +8,13 @@ import java.awt.Graphics2D;
 import javax.swing.JPanel;
 
 import entity.Player;
+import prop.Prop;
 import tile.TileManager;
 
 public class GamePanel extends JPanel implements Runnable {
 
 	private static final long serialVersionUID = 1L;
+
 	// SCREEN SETTINGS
 	public final int originalTileSize = 18;
 	public final int scale = 3;
@@ -25,19 +27,22 @@ public class GamePanel extends JPanel implements Runnable {
 	public final int screenWidth = tileSize * maxScreenCol; // 864px
 	public final int screenHeight = tileSize * maxScreenRow; // 648px
 
+	final int oneSecondInNano = 1000000000;
+	final int FPS = 30;
+
 	// WORLD SETTINGS
 	public final int maxWorldCol = 160;
 	public final int maxWorldRow = 120;
 	public final int worldWidth = tileSize * maxWorldCol;
 	public final int worldHeight = tileSize * maxWorldRow;
 
-	final int oneSecondInNano = 1000000000;
-	final int FPS = 30;
-
 	KeyHandler keyHandler = new KeyHandler();
 	Thread gameThread;
 	TileManager tileManager = new TileManager(this);
 	public Player player = new Player(this, keyHandler);
+	public CollisionChecker colChecker = new CollisionChecker(this);
+	public PropsCreator propsCreator = new PropsCreator(this);
+	public Prop props[] = new Prop[10];
 
 	public GamePanel() {
 
@@ -46,6 +51,11 @@ public class GamePanel extends JPanel implements Runnable {
 		this.setDoubleBuffered(true);
 		this.addKeyListener(keyHandler);
 		this.setFocusable(true);
+	}
+
+	public void setGameState() {
+
+		this.propsCreator.createMapProps();
 	}
 
 	public void startGameThread() {
@@ -88,11 +98,16 @@ public class GamePanel extends JPanel implements Runnable {
 	public void paintComponent(Graphics g) {
 
 		super.paintComponent(g);
-		Graphics2D g2d = (Graphics2D) g;
+		Graphics2D g2 = (Graphics2D) g;
 
-		tileManager.draw(g2d);
-		player.draw(g2d);
+		tileManager.draw(g2); // Tiles
+		for (int i = 0; i < props.length; i++) {
 
-		g2d.dispose();
+			if (props[i] != null) {
+				props[i].draw(g2, this);
+			}
+		}
+		player.draw(g2); // Player
+		g2.dispose();
 	}
 }
