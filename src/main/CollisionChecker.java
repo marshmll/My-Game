@@ -4,7 +4,7 @@ import java.awt.Rectangle;
 
 import entity.Entity;
 import entity.Player;
-import prop.Prop;
+import item.Item;
 
 public class CollisionChecker {
 
@@ -104,17 +104,17 @@ public class CollisionChecker {
 	public int checkPropCollision(Entity entity) {
 
 		boolean isPlayerEntity = entity instanceof Player;
-		
+
 		int index = -1; // DEFAULT VALUE FOR NO PROP INTERACTION
 
 		int entityHitBoxWorldX = entity.worldX + entity.hitBox.x;
 		int entityHitBoxWorldY = entity.worldY + entity.hitBox.y;
 
-		for (int i = 0; i < gp.props.length; i++) {
+		for (int i = 0; i < gp.itemsManager.items.length; i++) {
 			Rectangle entityHitBox = new Rectangle(entityHitBoxWorldX, entityHitBoxWorldY, entity.hitBoxWidth,
 					entity.hitBoxHeight);
 
-			Prop prop = gp.props[i];
+			Item prop = gp.itemsManager.items[i];
 
 			if (prop != null) {
 
@@ -126,12 +126,12 @@ public class CollisionChecker {
 
 				switch (entity.direction) {
 				case "up":
-					
+
 					entityHitBox.y -= entity.speed;
 
 					if (entityHitBox.intersects(propHitBox)) {
 
-						if (prop.isCollideable)							
+						if (prop.isCollideable)
 							entity.hasCollided = true;
 
 						if (isPlayerEntity)
@@ -140,12 +140,12 @@ public class CollisionChecker {
 
 					break;
 				case "down":
-					
+
 					entityHitBox.y += entity.speed;
 
 					if (entityHitBox.intersects(propHitBox)) {
 
-						if (prop.isCollideable)							
+						if (prop.isCollideable)
 							entity.hasCollided = true;
 
 						if (isPlayerEntity)
@@ -154,12 +154,12 @@ public class CollisionChecker {
 
 					break;
 				case "left":
-					
+
 					entityHitBox.x -= entity.speed;
 
 					if (entityHitBox.intersects(propHitBox)) {
 
-						if (prop.isCollideable)							
+						if (prop.isCollideable)
 							entity.hasCollided = true;
 
 						if (isPlayerEntity)
@@ -168,12 +168,12 @@ public class CollisionChecker {
 
 					break;
 				case "right":
-					
+
 					entityHitBox.x += entity.speed;
 
 					if (entityHitBox.intersects(propHitBox)) {
 
-						if (prop.isCollideable)							
+						if (prop.isCollideable)
 							entity.hasCollided = true;
 
 						if (isPlayerEntity)

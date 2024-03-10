@@ -4,8 +4,11 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
+
+import item.Item;
 import main.GamePanel;
 import main.KeyHandler;
 
@@ -20,7 +23,11 @@ public class Player extends Entity {
 	private int originalPlayerWidth = 16;
 	private int originalPlayerHeight = 18;
 
+	public ArrayList<Item> inventory;
+
 	private final String[] acceptedMoves = { "up", "down", "left", "right" };
+
+	private final int maxInventorySize;
 
 	public Player(GamePanel gp, KeyHandler keyHandler) {
 
@@ -43,12 +50,14 @@ public class Player extends Entity {
 
 		this.hitBoxDefaultX = 6 * gp.scale;
 		this.hitBoxDefaultY = 7 * gp.scale;
-
 		this.hitBox = new Rectangle(hitBoxDefaultX, hitBoxDefaultY, hitBoxWidth, hitBoxHeight);
 
 		this.hasCollided = false;
 
 		this.spriteUpdateRate = 4;
+
+		this.inventory = new ArrayList<Item>();
+		this.maxInventorySize = 9;
 
 		this.setDefaultValues();
 		this.getPlayerSprites();
@@ -114,13 +123,18 @@ public class Player extends Entity {
 				this.direction = keyHandler.pressedKey;
 				gp.colChecker.checkTileCollision(this);
 
-				if (!this.hasCollided)
+				// Pick up item action
+				int interactedPropIndex = gp.colChecker.checkPropCollision(this);
+				checkForPickUpItem(interactedPropIndex);
+
+				if (!this.hasCollided) {
+
 					movePlayer(this.direction);
+				}
 			}
 
-			// Pick up prop action
-			int interactedPropIndex = gp.colChecker.checkPropCollision(this);
-			pickUpProp(interactedPropIndex);
+			// Drop item action
+			checkForDropItem(gp.uiManager.hotbar.slotSelected);
 		}
 	}
 
@@ -145,12 +159,51 @@ public class Player extends Entity {
 
 	}
 
-	private void pickUpProp(int propIndex) {
+	private void checkForPickUpItem(int itemIndex) {
 
-		if (propIndex != -1) {
+		// -1 Index is standard for no item.
+		if (itemIndex != -1 && gp.itemsManager.items[itemIndex].isCollectible && !isInventoryFull()) {
 
-			gp.props[propIndex] = null;
+			// Verify if there's a empty slot available
+			for (int i = 0; i < inventory.size(); i++) {
+
+				// If so, place the item in the slot
+				if (inventory.get(i) == null) {
+
+					inventory.set(i, gp.itemsManager.items[itemIndex]);
+
+					// Remove item from world and play sound effect.
+					gp.itemsManager.items[itemIndex] = null;
+					gp.playSoundEffect("pop", .3f);
+
+					return;
+				}
+			}
+
+			// If not, add the item to end of the hotbar.
+			inventory.add(gp.itemsManager.items[itemIndex]);
+
+			// Remove item from world and play sound effect.
+			gp.itemsManager.items[itemIndex] = null;
+			gp.playSoundEffect("pop", .3f);
 		}
+	}
+
+	private void checkForDropItem(int slotSelected) {
+
+		if (inventory.size() != 0 && slotSelected <= inventory.size()) {
+
+			if (inventory.get(slotSelected - 1) != null && gp.keyHandler.pressedKey == "q") {
+
+				inventory.set(slotSelected - 1, null);
+
+			}
+		}
+	}
+
+	private boolean isInventoryFull() {
+
+		return inventory.size() == maxInventorySize ? true : false;
 	}
 
 	private void runAllAnimations() {
@@ -166,7 +219,7 @@ public class Player extends Entity {
 
 				// Movement Animation
 				if (Arrays.asList(acceptedMoves).contains(keyHandler.pressedKey)) {
-					runMovimentAnimation();
+					runMovementAnimation();
 				}
 
 				spriteUpdateCounter = 0;
@@ -175,7 +228,7 @@ public class Player extends Entity {
 			currentSpriteIndex = 0;
 	}
 
-	private void runMovimentAnimation() {
+	private void runMovementAnimation() {
 
 		if (spriteUpdateIterationCounter > spriteMovementAnimationMapping.length - 1) {
 

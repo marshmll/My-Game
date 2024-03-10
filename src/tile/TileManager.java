@@ -37,7 +37,7 @@ public class TileManager {
 		tile[6] = createTileFromPath("/tiles/radioactive_grass.png", false);
 		tile[7] = createTileFromPath("/tiles/radioactive_grass_path.png", false);
 		tile[8] = createTileFromPath("/tiles/radioactive_water.png", false);
-		tile[9] = createTileFromPath("/tiles/dead_bush.png", false);
+		tile[9] = createTileFromPath("/tiles/dead_bush.png", true);
 		tile[10] = createTileFromPath("/tiles/skull.png", false);
 		tile[11] = createTileFromPath("/tiles/dry_tree.png", true);
 	}

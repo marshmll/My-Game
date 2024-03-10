@@ -6,9 +6,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
+import ui.UIManager;
 
 import entity.Player;
-import prop.Prop;
+import item.ItemsManager;
 import tile.TileManager;
 
 public class GamePanel extends JPanel implements Runnable {
@@ -18,31 +19,31 @@ public class GamePanel extends JPanel implements Runnable {
 	// SCREEN SETTINGS
 	public final int originalTileSize = 18;
 	public final int scale = 3;
-
 	public final int tileSize = originalTileSize * scale; // 54
-
 	public final int maxScreenCol = 16;
 	public final int maxScreenRow = 12;
-
 	public final int screenWidth = tileSize * maxScreenCol; // 864px
 	public final int screenHeight = tileSize * maxScreenRow; // 648px
-
-	final int oneSecondInNano = 1000000000;
-	final int FPS = 30;
+	private final int oneSecondInNano = 1000000000;
+	private final int FPS = 30;
 
 	// WORLD SETTINGS
 	public final int maxWorldCol = 160;
 	public final int maxWorldRow = 120;
-	public final int worldWidth = tileSize * maxWorldCol;
-	public final int worldHeight = tileSize * maxWorldRow;
 
-	KeyHandler keyHandler = new KeyHandler();
+	// SYSTEM
+	public KeyHandler keyHandler = new KeyHandler();
+	public UIManager uiManager = new UIManager(this);
+	Sound sound = new Sound();
 	Thread gameThread;
+
+	// TILES
 	TileManager tileManager = new TileManager(this);
-	public Player player = new Player(this, keyHandler);
+
+	// ENTITY
 	public CollisionChecker colChecker = new CollisionChecker(this);
-	public PropsCreator propsCreator = new PropsCreator(this);
-	public Prop props[] = new Prop[10];
+	public Player player = new Player(this, keyHandler);
+	public ItemsManager itemsManager = new ItemsManager(this);
 
 	public GamePanel() {
 
@@ -55,7 +56,8 @@ public class GamePanel extends JPanel implements Runnable {
 
 	public void setGameState() {
 
-		this.propsCreator.createMapProps();
+		this.itemsManager.createMapitems();
+		this.playMusic("underclocked", .1f);
 	}
 
 	public void startGameThread() {
@@ -93,6 +95,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 	public void update() {
 		player.update();
+		uiManager.update();
 	}
 
 	public void paintComponent(Graphics g) {
@@ -100,14 +103,31 @@ public class GamePanel extends JPanel implements Runnable {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
-		tileManager.draw(g2); // Tiles
-		for (int i = 0; i < props.length; i++) {
+		tileManager.draw(g2); 	// Tiles
+		itemsManager.draw(g2); 	// Items
+		player.draw(g2); 		// Player
+		uiManager.draw(g2); 	// UI
 
-			if (props[i] != null) {
-				props[i].draw(g2, this);
-			}
-		}
-		player.draw(g2); // Player
 		g2.dispose();
+	}
+
+	public void playMusic(String name, float volume) {
+
+		sound.setFile(name);
+		sound.setVolume(volume);
+		sound.play();
+		sound.loop();
+	}
+
+	public void stopMusic() {
+
+		sound.stop();
+	}
+
+	public void playSoundEffect(String efName, float volume) {
+
+		sound.setFile(efName);
+		sound.setVolume(volume);
+		sound.play();
 	}
 }
